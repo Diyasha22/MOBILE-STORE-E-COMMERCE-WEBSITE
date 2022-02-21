@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE hibernate-reverse-engineering PUBLIC "-//Hibernate/Hibernate Reverse Engineering DTD 3.0//EN" "http://hibernate.org/dtd/hibernate-reverse-engineering-3.0.dtd" >
+
+<hibernate-reverse-engineering>
+  <table-filter match-schema="mobilestoredb" match-name=".*"/>
+  <table-filter match-catalog="mobilestoredb" match-name="category"/>
+  <table-filter match-catalog="mobilestoredb" match-name="customer"/>
+  <table-filter match-catalog="mobilestoredb" match-name="mobile"/>
+  <table-filter match-catalog="mobilestoredb" match-name="mobile_order"/>
+  <table-filter match-catalog="mobilestoredb" match-name="order_detail"/>
+  <table-filter match-catalog="mobilestoredb" match-name="review"/>
+  <table-filter match-catalog="mobilestoredb" match-name="users"/>
+  <table-filter match-schema="sys" match-name=".*" exclude="true"/>
+  <table-filter match-schema="bloodbank" match-name=".*" exclude="true"/>
+</hibernate-reverse-engineering>
