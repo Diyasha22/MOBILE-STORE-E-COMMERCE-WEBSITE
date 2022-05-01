@@ -4,8 +4,6 @@ import java.io.IOException;
 import java.util.List;
 
 import javax.persistence.EntityManager;
-import javax.persistence.EntityManagerFactory;
-import javax.persistence.Persistence;
 import javax.servlet.RequestDispatcher;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
@@ -15,8 +13,6 @@ import com.mobilestore.dao.UserDAO;
 import com.mobilestore.entity.Users;
 
 public class UserServices {
- private EntityManagerFactory entityManagerFactory;
- private EntityManager entityManager;
  private UserDAO userDAO;
  private HttpServletRequest request;
  private HttpServletResponse response;
@@ -24,9 +20,7 @@ public class UserServices {
  public UserServices(HttpServletRequest request, HttpServletResponse response) {
 	 this.request=request;
 	 this.response=response;
-	 entityManagerFactory =Persistence.createEntityManagerFactory("MobileStoreWebsite");
-	 entityManager=entityManagerFactory.createEntityManager();
-	userDAO=new UserDAO(entityManager);
+	userDAO=new UserDAO();
 }
  
  public void listUser() throws ServletException, IOException
@@ -108,5 +102,23 @@ public void deleteUser() throws ServletException, IOException {
 	userDAO.delete(userId);
 	String message="User with ID "+userId+" has been deleted successfully!";
 	listUser(message);
+}
+public void login() throws ServletException, IOException {
+	String email=request.getParameter("email");
+	String password=request.getParameter("password");
+	boolean loginResult=userDAO.checkLogin(email, password);
+	if(loginResult)
+	{
+		request.getSession().setAttribute("useremail", email);
+		RequestDispatcher dispatcher=request.getRequestDispatcher("/admin/");
+		dispatcher.forward(request, response);
+	}
+	else
+	{
+		String message="Login failed";
+		request.setAttribute("message", message);
+		RequestDispatcher dispatcher=request.getRequestDispatcher("login.jsp");
+		dispatcher.forward(request, response);
+	}
 }
 }

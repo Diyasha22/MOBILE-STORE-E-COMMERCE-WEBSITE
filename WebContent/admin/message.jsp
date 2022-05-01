@@ -4,7 +4,8 @@
 <html>
 <head>
 <meta charset="ISO-8859-1">
-<title>BoostMobile Store Administration</title>
+<title>Mobile Store Administration</title>
+<link rel="stylesheet" href="../css/style.css">
 </head>
 <body>
 <jsp:directive.include file="header.jsp"/>

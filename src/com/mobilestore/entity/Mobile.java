@@ -1,9 +1,13 @@
 package com.mobilestore.entity;
 // Generated 13-Jul-2021, 10:07:40 pm by Hibernate Tools 5.2.12.Final
 
+import java.util.Base64;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.TreeSet;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -12,10 +16,13 @@ import static javax.persistence.GenerationType.IDENTITY;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.NamedQueries;
+import javax.persistence.NamedQuery;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.Temporal;
 import javax.persistence.TemporalType;
+import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 
 /**
@@ -23,11 +30,24 @@ import javax.persistence.UniqueConstraint;
  */
 @Entity
 @Table(name = "mobile", catalog = "mobilestoredb", uniqueConstraints = @UniqueConstraint(columnNames = "model"))
+@NamedQueries({
+	@NamedQuery(name = "Mobile.findAll" , query="SELECT m FROM Mobile m"),
+	@NamedQuery(name = "Mobile.findByModel" , query="SELECT m FROM Mobile m WHERE m.model = :model"),
+	@NamedQuery(name = "Mobile.countAll" , query="SELECT COUNT(*) FROM Mobile m"),
+	@NamedQuery(name = "Mobile.countByCategory" , query="SELECT COUNT(m) FROM Mobile m "
+			+ "WHERE m.category.categoryId = :catId"),
+	@NamedQuery(name = "Mobile.findByCategory" , query="SELECT m FROM Mobile m JOIN "
+		+ "Category c ON m.category.categoryId = c.categoryId AND c.categoryId = :catId"),
+	@NamedQuery(name= "Mobile.listNew" , query="SELECT m FROM Mobile m ORDER BY m.publishDate DESC"),
+	@NamedQuery(name= "Mobile.search", query="SELECT m FROM Mobile m where m.model LIKE '%' || :keyword || '%'"
+				+ " OR m.company LIKE '%' || :keyword || '%'"
+				+ " OR m.description LIKE '%' || :keyword || '%'")
+})
+
 public class Mobile implements java.io.Serializable {
 
-	/**
-	 * 
-	 */
+	private static final long serialVersionUID = 1L;
+	
 	//private static final long serialVersionUID = 1L;
 	private Integer mobileId;
 	private Category category;
@@ -42,7 +62,13 @@ public class Mobile implements java.io.Serializable {
 	private Set<Review> reviews = new HashSet<Review>(0);
 	private Set<OrderDetail> orderDetails = new HashSet<OrderDetail>(0);
 
+	private String base64Image;
+
 	public Mobile() {
+	}
+	public Mobile(Integer mobileId) {
+		super();
+		this.mobileId=mobileId;
 	}
 
 	public Mobile(Category category, String model, String company, String description, String imei, byte[] image,
@@ -85,7 +111,7 @@ public class Mobile implements java.io.Serializable {
 		this.mobileId = mobileId;
 	}
 
-	@ManyToOne(fetch = FetchType.LAZY)
+	@ManyToOne(fetch = FetchType.EAGER)
 	@JoinColumn(name = "category_id", nullable = false)
 	public Category getCategory() {
 		return this.category;
@@ -169,16 +195,26 @@ public class Mobile implements java.io.Serializable {
 		this.lastUpdateTime = lastUpdateTime;
 	}
 
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "mobile")
+	@OneToMany(fetch = FetchType.EAGER, mappedBy = "mobile")
 	public Set<Review> getReviews() {
-		return this.reviews;
+		TreeSet<Review> sortedReviews=new TreeSet<>(new Comparator<Review>() {
+
+			@Override
+			public int compare(Review review1, Review review2) {
+				return review2.getReviewTime().compareTo(review1.getReviewTime());
+			}
+			
+		});
+		
+		sortedReviews.addAll(reviews);
+		return sortedReviews;
 	}
 
 	public void setReviews(Set<Review> reviews) {
 		this.reviews = reviews;
 	}
 
-	@OneToMany(fetch = FetchType.LAZY, mappedBy = "mobile")
+	@OneToMany(fetch = FetchType.EAGER, mappedBy = "mobile")
 	public Set<OrderDetail> getOrderDetails() {
 		return this.orderDetails;
 	}
@@ -187,4 +223,85 @@ public class Mobile implements java.io.Serializable {
 		this.orderDetails = orderDetails;
 	}
 
+	@Transient
+	public String getbase64Image() {
+		this.base64Image= Base64.getEncoder().encodeToString(this.image);
+		return this.base64Image;
+	}
+	
+	@Transient
+	public void setbase64Image(String base64Image) {
+		this.base64Image=base64Image;
+	}
+	
+	@Transient
+	public float getAverageRating() {
+		float averageRating = 0.0f;
+		float sum = 0.0f;
+		
+		if(reviews.isEmpty()) {
+			return 0.0f;
+		}
+		
+		for(Review review : reviews) {
+			sum+=review.getRating();
+		}
+		
+		averageRating=sum/reviews.size();
+		
+		return averageRating;
+	}
+	
+	@Transient
+	public String getRatingString(float averageRating) {
+		String result="";
+		
+		int numberOfStarsOn = (int) averageRating;
+		
+		for(int i=1;i<= numberOfStarsOn;i++) {
+			result+="on,";
+		}
+		
+		int next=numberOfStarsOn+1;
+		
+		if(averageRating > numberOfStarsOn) {
+			result+="half,";			
+			next++;
+		}
+		
+		for(int i=next;i<=5;i++) {
+			result+="off,";
+		}
+		
+		return result.substring(0, result.length()-1);
+	}
+
+	
+	@Transient
+	public String getRatingStars() {
+		float averageRating=getAverageRating();
+		
+		return getRatingString(averageRating);
+	}
+	@Override
+	public int hashCode() {
+		final int prime = 31;
+		int result = 1;
+		result = prime * result + mobileId;
+		return result;
+	}
+
+	@Override
+	public boolean equals(Object obj) {
+		if (this == obj)
+			return true;
+		if (obj == null)
+			return false;
+		if (getClass() != obj.getClass())
+			return false;
+		Mobile other = (Mobile) obj;
+		if (mobileId != other.mobileId)
+			return false;
+		return true;
+	}
 }

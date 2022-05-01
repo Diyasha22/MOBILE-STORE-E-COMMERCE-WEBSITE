@@ -17,18 +17,14 @@ import org.junit.Test;
 
 import com.mobilestore.entity.Users;
 
-public class UserDAOTest {
-
-	private static  EntityManagerFactory entityManagerFactory;
-	private static EntityManager entityManager;
+public class UserDAOTest{
+	
 	private static UserDAO userDAO;
 	
 	@BeforeClass
-	public static void setupClass()
+	public static void setUpBeforeClass() throws Exception
 	{
-	  entityManagerFactory = Persistence.createEntityManagerFactory("MobileStoreWebsite");
-	  entityManager= entityManagerFactory.createEntityManager();
-      userDAO= new UserDAO(entityManager);
+      userDAO= new UserDAO();
 	}
 	
 	@Test
@@ -106,6 +102,15 @@ public class UserDAOTest {
 	}
 	
 	@Test
+	public void testCheckLoginSuccess()
+	{
+		String email="diya1234diyasha@gmail.com";
+		String password="hell";
+		boolean loginResult=userDAO.checkLogin(email, password);
+		assertFalse(loginResult);
+	}
+	
+	@Test
 	public void testFindByEmail()
 	{
 		String email="rahul98@gmail.com";
@@ -113,10 +118,8 @@ public class UserDAOTest {
 	     assertNotNull(user);
 	}
 @AfterClass
-public static void tearDownClass()
-{
-	entityManager.close();
-    entityManagerFactory.close();
+public static void tearDownAfterClass() throws Exception {
+	userDAO.close();
 }
 
 }

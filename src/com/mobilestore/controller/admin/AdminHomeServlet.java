@@ -20,13 +20,16 @@ public class AdminHomeServlet extends HttpServlet {
       
     }
 
-	
+    @Override
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		doGet(req, resp);
+	}
+
+    
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		String homepage="index.jsp";
-		//System.out.println("AdminHomeServlet");
 		RequestDispatcher dispatcher=request.getRequestDispatcher(homepage);
 		dispatcher.forward(request, response);
 	}
-
 	
 }
